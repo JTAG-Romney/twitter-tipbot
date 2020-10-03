@@ -6,11 +6,11 @@
     "winston": "3",
     "winston-daily-rotate-file": "^3.2.3"
   },
-  "name": "lbry-twitter-tipbot",
+  "name": "htmlcoin-twitter-tipbot",
   "version": "1.0.0",
-  "description": "A twitter tipbot for LBRY",
+  "description": "A twitter tipbot for HTMLCOIN",
   "main": "index.js",
-  "repository": "https://github.com/lbryio/twitter-tipbot/",
+  "repository": "https://github.com/denuoweb/twitter-tipbot/",
   "author": "filipnyquist <filip@lbry.io>",
   "license": "MIT",
   "private": false
