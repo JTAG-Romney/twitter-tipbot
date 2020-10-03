@@ -3,10 +3,10 @@ const config = require("config");
 const winston = require("winston");
 require("winston-daily-rotate-file");
 const Client = require("bitcoin-core");
-const lbry = new Client({
-  username: config.get("lbrycrd.username"),
-  password: config.get("lbrycrd.password"),
-  port: config.get("lbrycrd.port")
+const htmlcoin = new Client({
+  username: config.get("htmlcoind.username"),
+  password: config.get("htmlcoind.password"),
+  port: config.get("htmlcoind.port")
 });
 const logger = winston.createLogger({
   level: "info",
@@ -37,7 +37,7 @@ const T = new Twit({
 });
 
 const stream = T.stream("statuses/filter", { track: config.get("bot.handle") });
-logger.info("Started LBRY twitter tipbot.");
+logger.info("Started Althash twitter tipbot.");
 
 stream.on("tweet", function(tweet) {
   if(tweet.user.screen_name === config.get("bot.handle").substring(1)) return;
@@ -100,16 +100,16 @@ async function doTerms(tweet, msg){
     status:
     `@${tweet.user.screen_name} `+
     "There are no fees to use this bot except the automatic daemon fee. \n"+
-    "Under no circumstances shall LBRY Inc. be held responsible for lost, stolen or misdirected funds.",
+    "Under no circumstances shall The Htmlcoin Foundation be held responsible for lost, stolen or misdirected funds.",
     in_reply_to_status_id: tweet.id_str
   });
 }
 async function doBalance(tweet, msg) {
   try {
-    const balance = await lbry.getBalance(id(tweet.user.id_str), config.get("bot.requiredConfirms")); // Amount of confirms before we can use it.
+    const balance = await htmlcoin.getBalance(id(tweet.user.id_str), config.get("bot.requiredConfirms")); // Amount of confirms before we can use it.
     const post = await T.post("statuses/update", {
       in_reply_to_status_id: tweet.id_str,
-      status: `@${tweet.user.screen_name} You have ${balance} LBC.`
+      status: `@${tweet.user.screen_name} You have ${balance} HTML.`
     });
     logger.info(
       `Sent balance command to ${tweet.user.screen_name}, tweet id: ${
@@ -142,19 +142,19 @@ async function doWithdraw(tweet, msg) {
   let amount = getValidatedAmount(msg[3]);
   if (amount === null) {
     return await T.post("statuses/update", {
-      status: `@${tweet.user.screen_name} I don´t know how to withdraw that many credits...`,
+      status: `@${tweet.user.screen_name} - you are not able to withdraw that many credits.`,
       in_reply_to_status_id: tweet.id_str
     });
   }
-  let txId = await lbry.sendFrom(id(tweet.user.id_str), address, amount);
+  let txId = await htmlcoin.sendFrom(id(tweet.user.id_str), address, amount);
   await T.post("statuses/update", {
-    status: `@${tweet.user.screen_name} You withdrew ${amount} LBC to ${address}. \n${txLink(txId)}`,
+    status: `@${tweet.user.screen_name} You withdrew ${amount} HTML to ${address}. \n${txLink(txId)}`,
     in_reply_to_status_id: tweet.id_str
   });
   logger.info(
     `User ${
       tweet.user.screen_name
-    } withdraw ${amount} LBC to ${address}, tweet id: ${tweet.id_str}`
+    } withdraw ${amount} HTML to ${address}, tweet id: ${tweet.id_str}`
   );
   } catch (e) {
     logger.error(e);
@@ -168,7 +168,7 @@ async function doTip(tweet, msg) {
     const amount = getValidatedAmount(msg[3]);
     if (amount === null) {
       return await T.post("statuses/update", {
-        status: `@${tweet.user.screen_name} I don´t know how to tip that many credits...`,
+        status: `@${tweet.user.screen_name} - you can not tip that many credits.`,
         in_reply_to_status_id: tweet.id_str
       });
     }
@@ -180,22 +180,22 @@ async function doTip(tweet, msg) {
         in_reply_to_status_id: tweet.id_str
       });
     }
-    const balanceFromUser = await lbry.getBalance(id(tweet.user.id_str), config.get("bot.requiredConfirms"));
+    const balanceFromUser = await htmlcoin.getBalance(id(tweet.user.id_str), config.get("bot.requiredConfirms"));
     if (balanceFromUser < amount) {
       return await T.post("statuses/update", {
-        status: `@${tweet.user.screen_name} You tried tipping more than you have! You are ${amount-balanceFromUser} LBC short.`,
+        status: `@${tweet.user.screen_name} You tried tipping more than you have! You are ${amount-balanceFromUser} HTML short.`,
         in_reply_to_status_id: tweet.id_str
       });
     }
-    const txId = await lbry.sendFrom(id(tweet.user.id_str), tipToAddress, Number(amount), 1);
+    const txId = await htmlcoin.sendFrom(id(tweet.user.id_str), tipToAddress, Number(amount), 1);
     await T.post("statuses/update", {
-      status: `@${tweet.user.screen_name} Tipped ${amount} LBC! We'd say who it was to, but then Twitter would ban the bot. \nTransaction: ${txLink(txId)} \nSee https://lbry.com/faq/tipbot-twitter for more information.`,
+      status: `@${tweet.user.screen_name} Tipped ${amount} HTML! We'd say who it was to, but then Twitter would ban the bot. \nTransaction: ${txLink(txId)} \nSee https://lbry.com/faq/tipbot-twitter for more information.`,
       in_reply_to_status_id: tweet.id_str
     });
     logger.info(
       `@${tweet.user.screen_name}(${tweet.user.id_str}) tipped ${
         msg[2]
-      }(${userToTip}) ${amount} LBC.`
+      }(${userToTip}) ${amount} HTML.`
     );
   } catch (e) {
     logger.error(e);
@@ -204,9 +204,9 @@ async function doTip(tweet, msg) {
 
 async function getAddress(userId) {
   try {
-    let uAddresses = await lbry.getAddressesByAccount(userId);
+    let uAddresses = await htmlcoin.getAddressesByAccount(userId);
     if (uAddresses.length > 0) return uAddresses[0];
-    let nAddress = await lbry.getNewAddress(userId);
+    let nAddress = await htmlcoin.getNewAddress(userId);
     return nAddress;
   } catch (e) {
     logger.error(e);
@@ -215,13 +215,13 @@ async function getAddress(userId) {
 
 function getValidatedAmount(amount) {
   amount = amount.trim();
-  if (amount.toLowerCase().endsWith("lbc")) {
+  if (amount.toLowerCase().endsWith("html")) {
     amount = amount.substring(0, amount.length - 3);
   }
   return amount.match(/^[0-9]+(\.[0-9]+)?$/) ? amount : null;
 }
 function txLink(txId) {
-  return `https://explorer.lbry.com/tx/${txId}`;
+  return `https://explorer.htmlcoin.com/tx/${txId}`;
 }
 function checkTrunc(tweet) {
   if (tweet.truncated) return tweet.extended_tweet.full_text;
