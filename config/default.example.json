@@ -1,7 +1,7 @@
 {
   "bot":{
-    "handle": "@devlbctipbot",
-    "requiredConfirms": 2
+    "handle": "@HtmlcoinTipBot",
+    "requiredConfirms": 6
   },
   "twitter": {
     "consumer_key": "****",
@@ -10,8 +10,8 @@
     "access_token_secret": "****"
   },
   "lbrycrd": {
-    "username": "lbry",
-    "password": "lbry",
+    "username": "*****",
+    "password": "*****",
     "port": 9245
   }
 }
